@@ -1,0 +1,19 @@
+{
+    "name": "nchoquet/dis_php7-4_orm",
+    "description": "module d'ORM pour DIS Framework",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nicolas Choquet",
+            "email": "nicolachoquet06250@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "orm\\": "lib"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {}
+}
