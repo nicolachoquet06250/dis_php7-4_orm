@@ -11,9 +11,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "orm\\": "lib"
+            "dis\\orm\\": "lib"
         }
     },
     "minimum-stability": "stable",
-    "require": {}
+    "require": {
+        "nchoquet/dis_framework_php7-4": "dev-master",
+        "illuminate/database": "^7.1"
+    }
 }
