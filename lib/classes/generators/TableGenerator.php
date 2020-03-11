@@ -7,8 +7,8 @@ require_once __DIR__.'/../../../vendor/autoload.php';
 
 
 use dis\orm\classes\models\TestModel;
+use dis\orm\classes\mvc\Model;
 use Illuminate\Database\Capsule\Manager;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint as Table;
 use Illuminate\Database\Schema\ColumnDefinition;
 use ReflectionClass;
@@ -17,6 +17,10 @@ use ReflectionException;
 class TableGenerator {
     private string $class;
     private array $parsedDoc = [];
+
+    public function __construct(string $class) {
+        $this->class = $class;
+    }
 
     private function string2array(string $doc) {
         if ($doc) {
@@ -92,47 +96,60 @@ class TableGenerator {
 
     /**
      * @param string $class
+     * @return array
      * @throws ReflectionException
      */
-    public function parse(string $class) {
-        $this->class = $class;
+    public static function getDocumentation(string $class) {
+        $tg = new static($class);
+        $tg->get_class_doc();
+        $tg->get_class_properties_doc();
+        return $tg->parsedDoc;
+    }
+
+    /**
+     * @param string $class
+     * @throws ReflectionException
+     */
+    public function create() {
         $this->get_class_doc();
         $this->get_class_properties_doc();
-        var_dump($this->parsedDoc);
-//        Manager::schema()->create($this->getName(), function (Table $table) {
-//            if(!isset($this->getProperties()['id'])) {
-//                $table->increments('id')->primary();
-//            }
-//            foreach ($this->getProperties() as $name => $items) {
-//                if(isset($items['db_type'])) {
-//                    $db_type = $items['var'];
-//                    $db_type = explode(' ', $db_type)[0];
-//                    $items['db_type'] = $db_type;
-//                }
-//                if(in_array($items['db_type'], get_class_methods(get_class($table)))) {
-//                    /** @var ColumnDefinition $field */
-//                    $field = $table->{$items['db_type']}($name);
-//                    if(isset($items['nullable'])) $field->nullable();
-//                    if(isset($items['unique'])) $field->unique();
-//                    if(isset($items['unsigned'])) $field->unsigned();
-//                    if(isset($items['auto-increment'])) $field->autoIncrement();
-//                    if(isset($items['primary'])) $field->primary();
-//                    if(isset($items['default'])) $field->default($items['default']);
-//                }
-//            }
-//
-//            $table->timestamps();
-//
-//            foreach ($this->getProperties() as $name => $items) {
-//                if(isset($items['foreign_key'])) {
-//                    $foreign = json_decode($items['foreign_key'], true);
-//                    $table->foreign($name)->references($foreign['reference'])->on($foreign['table'])->onDelete('cascade');
-//                }
-//            }
-//        });
+        Manager::schema()->create($this->getName(), function (Table $table) {
+            if(!isset($this->getProperties()['id'])) {
+                $table->increments('id')->primary();
+            }
+            foreach ($this->getProperties() as $name => $items) {
+                if(isset($items['db_type'])) {
+                    $db_type = $items['var'];
+                    $db_type = explode(' ', $db_type)[0];
+                    $items['db_type'] = $db_type;
+                }
+                if(in_array($items['db_type'], get_class_methods(get_class($table)))) {
+                    /** @var ColumnDefinition $field */
+                    $field = $table->{$items['db_type']}($name);
+                    if(isset($items['nullable'])) $field->nullable();
+                    if(isset($items['unique'])) $field->unique();
+                    if(isset($items['unsigned'])) $field->unsigned();
+                    if(isset($items['auto-increment'])) $field->autoIncrement();
+                    if(isset($items['primary'])) $field->primary();
+                    if(isset($items['default'])) $field->default($items['default']);
+                }
+            }
+
+            $table->timestamps();
+
+            foreach ($this->getProperties() as $name => $items) {
+                if(isset($items['foreign_key'])) {
+                    $foreign = json_decode($items['foreign_key'], true);
+                    $table->foreign($name)->references($foreign['reference'])->on($foreign['table'])->onDelete('cascade');
+                }
+            }
+        });
     }
 }
 
-$table_generator = new TableGenerator();
+//$table_generator = new TableGenerator(TestModel::class);
+//
+//$table_generator->create();
 
-$table_generator->parse(TestModel::class);
+$m = TestModel::getModel();
+var_dump($m);

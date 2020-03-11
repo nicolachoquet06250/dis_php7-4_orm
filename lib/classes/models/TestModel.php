@@ -4,7 +4,7 @@
 namespace dis\orm\classes\models;
 
 
-use Illuminate\Database\Eloquent\Model;
+use dis\orm\classes\mvc\Model;
 
 /**
  * Class TestModel
@@ -17,6 +17,7 @@ class TestModel extends Model {
     /**
      * @db_field
      * @db_type string
+     * @hidden
      *
      * @var string
      */
