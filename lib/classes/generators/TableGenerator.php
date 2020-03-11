@@ -3,10 +3,7 @@
 
 namespace dis\orm\classes\generators;
 
-require_once __DIR__.'/../../../vendor/autoload.php';
 
-
-use dis\orm\classes\models\TestModel;
 use dis\orm\classes\mvc\Model;
 use Illuminate\Database\Capsule\Manager;
 use Illuminate\Database\Schema\Blueprint as Table;
@@ -146,10 +143,3 @@ class TableGenerator {
         });
     }
 }
-
-//$table_generator = new TableGenerator(TestModel::class);
-//
-//$table_generator->create();
-
-$m = TestModel::getModel();
-var_dump($m);
