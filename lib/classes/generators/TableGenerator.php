@@ -4,10 +4,14 @@
 namespace dis\orm\classes\generators;
 
 
+use Cassandra\Date;
+use Cassandra\Time;
+use DateTime;
 use dis\orm\classes\mvc\Model;
 use Illuminate\Database\Capsule\Manager;
 use Illuminate\Database\Schema\Blueprint as Table;
 use Illuminate\Database\Schema\ColumnDefinition;
+use PDOException;
 use ReflectionClass;
 use ReflectionException;
 
@@ -15,11 +19,19 @@ class TableGenerator {
     private string $class;
     private array $parsedDoc = [];
 
+    /**
+     * TableGenerator constructor.
+     * @param string $class
+     */
     public function __construct(string $class) {
         $this->class = $class;
     }
 
-    private function string2array(string $doc) {
+    /**
+     * @param string $doc
+     * @return array
+     */
+    private function string2array(string $doc): array {
         if ($doc) {
             $doc = str_replace(['/**', "\t", ' * ', '*/', ' *'], '', $doc);
             $doc = explode("\n", $doc);
@@ -47,7 +59,6 @@ class TableGenerator {
     }
 
     /**
-     * @param string $class
      * @throws ReflectionException
      */
     private function get_class_doc() {
@@ -61,7 +72,6 @@ class TableGenerator {
     }
 
     /**
-     * @param string $class
      * @throws ReflectionException
      */
     private function get_class_properties_doc() {
@@ -79,7 +89,7 @@ class TableGenerator {
     /**
      * @return string
      */
-    protected function getName() {
+    protected function getName(): string {
         if (isset($this->parsedDoc[$this->class]['name'])) {
             return $this->parsedDoc[$this->class]['name'];
         } else {
@@ -87,7 +97,10 @@ class TableGenerator {
         }
     }
 
-    protected function getProperties() {
+    /**
+     * @return array
+     */
+    protected function getProperties(): array {
         return $this->parsedDoc[$this->class]['properties'];
     }
 
@@ -96,7 +109,7 @@ class TableGenerator {
      * @return array
      * @throws ReflectionException
      */
-    public static function getDocumentation(string $class) {
+    public static function getDocumentation(string $class): array {
         $tg = new static($class);
         $tg->get_class_doc();
         $tg->get_class_properties_doc();
@@ -104,42 +117,61 @@ class TableGenerator {
     }
 
     /**
-     * @param string $class
      * @throws ReflectionException
      */
     public function create() {
         $this->get_class_doc();
         $this->get_class_properties_doc();
-        Manager::schema()->create($this->getName(), function (Table $table) {
-            if(!isset($this->getProperties()['id'])) {
-                $table->increments('id')->primary();
-            }
-            foreach ($this->getProperties() as $name => $items) {
-                if(isset($items['db_type'])) {
-                    $db_type = $items['var'];
-                    $db_type = explode(' ', $db_type)[0];
-                    $items['db_type'] = $db_type;
-                }
-                if(in_array($items['db_type'], get_class_methods(get_class($table)))) {
-                    /** @var ColumnDefinition $field */
-                    $field = $table->{$items['db_type']}($name);
-                    if(isset($items['nullable'])) $field->nullable();
-                    if(isset($items['unique'])) $field->unique();
-                    if(isset($items['unsigned'])) $field->unsigned();
-                    if(isset($items['auto-increment'])) $field->autoIncrement();
-                    if(isset($items['primary'])) $field->primary();
-                    if(isset($items['default'])) $field->default($items['default']);
-                }
-            }
 
-            $table->timestamps();
+        try {
+            if(!Manager::schema()->hasTable($this->getName())) {
+                Manager::schema()->create($this->getName(), function (Table $table) {
+                    if (!isset($this->getProperties()['id'])) $table->increments('id');
+                    foreach ($this->getProperties() as $name => $items) {
+                        if (isset($items['db_type'])) {
+                            $db_type = $items['var'];
+                            $db_type = explode(' ', $db_type)[0];
+                            $items['db_type'] = $db_type;
 
-            foreach ($this->getProperties() as $name => $items) {
-                if(isset($items['foreign_key'])) {
-                    $foreign = json_decode($items['foreign_key'], true);
-                    $table->foreign($name)->references($foreign['reference'])->on($foreign['table'])->onDelete('cascade');
-                }
-            }
-        });
+                            if (in_array($items['db_type'], get_class_methods(get_class($table)))) {
+                                /** @var ColumnDefinition $field */
+                                $field = $table->{$items['db_type']}($name);
+                                if (isset($items['nullable'])) $field->nullable();
+                                if (isset($items['unique'])) $field->unique();
+                                if (isset($items['unsigned'])) $field->unsigned();
+                                if (isset($items['auto-increment'])) $field->autoIncrement();
+                                if (isset($items['primary'])) $field->primary();
+                                if (isset($items['default'])) {
+                                    switch ($items['default']) {
+                                        case 'NOW':
+                                            if($db_type === 'date' || $db_type === 'datetime' || $db_type === 'timestamp')
+                                                $items['default'] = (new DateTime())->getTimestamp();
+                                            $field->default($items['default']);
+                                            break;
+                                        default:
+                                            $field->default($items['default']);
+                                            break;
+                                    }
+
+
+                                }
+                            }
+                        }
+                    }
+
+                    $table->timestamps();
+
+                    foreach ($this->getProperties() as $name => $items) {
+                        if (isset($items['foreign_key'])) {
+                            $foreign = json_decode($items['foreign_key'], true);
+                            $table->foreign($name)->references($foreign['reference'])->on($foreign['table'])->onDelete('cascade');
+                        }
+                    }
+                });
+                echo "`{$this->getName()}` table has been created\n";
+            } else echo "`{$this->getName()}` table already exists\n";
+        } catch (PDOException $e) {
+            echo $e->getMessage()."\n";
+        }
     }
 }

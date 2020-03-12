@@ -18,5 +18,8 @@
     "require": {
         "nchoquet/dis_framework_php7-4": "dev-master",
         "illuminate/database": "^7.1"
+    },
+    "scripts": {
+        "migrate": "php scripts/db_test.php"
     }
 }
