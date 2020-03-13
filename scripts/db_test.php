@@ -3,7 +3,7 @@
 
 require_once __DIR__.'/../vendor/autoload.php';
 // USERNAME, PASSWORD and DATABASE constants definitions
-require_once __DIR__.'/constants.php';
+require_once __DIR__ . '/../confs/constants.php';
 
 use dis\orm\classes\bootstrap\ORMBootstrap;
 use dis\orm\classes\generators\TableGenerator;
@@ -14,6 +14,8 @@ ORMBootstrap::setConnection('mysql', USERNAME, PASSWORD, DATABASE)::run();
 try {
 
     (new TableGenerator(TestModel::class))->create();
+
+    (new TestModel())->getUpdatedAt();
 
     TestModel::insert('coucou', 1);
 

@@ -14,6 +14,10 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionException;
 
+/**
+ * Class Model
+ * @package dis\orm\classes\mvc
+ */
 class Model extends \Illuminate\Database\Eloquent\Model {
     const EQUALS = '=';
     const INFERIOR = '<';
@@ -32,13 +36,31 @@ class Model extends \Illuminate\Database\Eloquent\Model {
     const NOT_REGEXP = 'not regexp';
     const NOT_SIMILAR_TO = 'not similar to';
 
-    protected array $fillable = [];
+    protected $fillable = [];
 
-    protected array $hidden = [];
+    protected $hidden = [];
 
-    private array $hidden_keys = ['hidden'];
+	private array $hidden_keys = [ 'hidden' ];
 
     private array $doc = [];
+
+	/**
+	 * @db_field
+	 * @automatically-added
+	 * @db_type timestamp
+	 *
+	 * @var integer
+	 */
+	protected int $created_at;
+
+	/**
+	 * @db_field
+	 * @automatically-added
+	 * @db_type timestamp
+	 *
+	 * @var integer
+	 */
+	protected int $updated_at;
 
     /**
      * Model constructor.
@@ -92,25 +114,38 @@ class Model extends \Illuminate\Database\Eloquent\Model {
      * @throws Exception
      */
     public function __call($method, $parameters) {
-        preg_match('/(?<methodType>get|set)(?<propertyName>[A-Z][a-zA-Z]+)$/sD', $method, $matches);
-        if (!empty($matches) && isset($matches['methodType']) && isset($matches['propertyName'])) {
-            preg_match_all('/([A-Z][a-z]+)/sD', $matches['propertyName'], $_matches);
-            $prop_parts = [];
-            foreach ($_matches[1] as $k => $v) $prop_parts[$k] = strtolower($v);
-            $property = implode('_', $prop_parts);
-            $r = new ReflectionClass(static::class);
-            switch ($matches['methodType']) {
-                case 'set':
-                    if ($r->hasProperty($property)) $r->getProperty($property)->setValue($this, $parameters[0]);
-                    else if($r->hasProperty($matches['propertyName'])) $r->getProperty($matches['propertyName'])->setValue($this, $parameters[0]);
-                    else throw new Exception(static::class.'::$'.$matches['propertyName'].' or '.static::class.'::$'.$property.' property not found !');
-                    return $this;
-                case 'get':
-                    if ($r->hasProperty($property)) return $r->getProperty($property)->getValue($this);
-                    else if($r->hasProperty($matches['propertyName'])) return $r->getProperty($matches['propertyName'])->getValue($this);
-                    else throw new Exception(static::class.'::$'.$matches['propertyName'].' or '.static::class.'::$'.$property.' property not found !');
-            }
-        }
+	    $r = new ReflectionClass(static::class);
+    	if(!$r->hasMethod($method)) {
+		    preg_match( '/(?<methodType>get|set)(?<propertyName>[A-Z][a-zA-Z]+)$/sD', $method, $matches );
+		    if ( ! empty( $matches ) && isset( $matches['methodType'] ) && isset( $matches['propertyName'] ) ) {
+			    preg_match_all( '/([A-Z][a-z]+)/sD', $matches['propertyName'], $_matches );
+			    $prop_parts = [];
+			    foreach ( $_matches[1] as $k => $v ) {
+				    $prop_parts[ $k ] = strtolower( $v );
+			    }
+			    $property = implode( '_', $prop_parts );
+			    switch ( $matches['methodType'] ) {
+				    case 'set':
+					    if ( $r->hasProperty( $property ) ) {
+						    $r->getProperty( $property )->setValue( $this, $parameters[0] );
+					    } else if ( $r->hasProperty( $matches['propertyName'] ) ) {
+						    $r->getProperty( $matches['propertyName'] )->setValue( $this, $parameters[0] );
+					    } else {
+						    throw new Exception( static::class . '::$' . $matches['propertyName'] . ' or ' . static::class . '::$' . $property . ' property not found !' );
+					    }
+
+					    return $this;
+				    case 'get':
+					    if ( $r->hasProperty( $property ) ) {
+						    return $r->getProperty( $property )->getValue( $this );
+					    } else if ( $r->hasProperty( $matches['propertyName'] ) ) {
+						    return $r->getProperty( $matches['propertyName'] )->getValue( $this );
+					    } else {
+						    throw new Exception( static::class . '::$' . $matches['propertyName'] . ' or ' . static::class . '::$' . $property . ' property not found !' );
+					    }
+			    }
+		    }
+	    }
         return parent::__call($method, $parameters);
     }
 
@@ -195,8 +230,27 @@ class Model extends \Illuminate\Database\Eloquent\Model {
         static::table()::macro($name, $macro);
     }
 
-    public function save(array $options = []) {
+	/**
+	 * @param array $options
+	 *
+	 * @return bool
+	 */
+    public function save(array $options = []): bool {
         $this->setUpdatedAt((new DateTime())->getTimestamp());
         return parent::save($options);
     }
+
+	/**
+	 * @return int
+	 */
+    public function getCreatedAt(): int {
+    	return $this->created_at;
+    }
+
+	/**
+	 * @return int
+	 */
+	public function getUpdatedAt(): int {
+		return $this->created_at;
+	}
 }

@@ -5,6 +5,7 @@ namespace dis\orm\classes\models;
 
 
 use dis\orm\classes\mvc\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Date;
 
 /**
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Date;
  * @name test
  *
  * @method static bool insert(string $test, integer $user_id)
+ * @method static Builder|TestModel find($id, string ...$columns)
  *
  * @method integer getId()
  *
@@ -22,10 +24,6 @@ use Illuminate\Support\Facades\Date;
  *
  * @method integer getUserId()
  * @method static setUserId(integer $userId)
- *
- * @method string getCreatedAt()
- *
- * @method string getUpdatedAt()
  */
 class TestModel extends Model {
     /**

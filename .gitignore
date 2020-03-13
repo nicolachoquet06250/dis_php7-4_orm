@@ -1,4 +1,5 @@
 vendor/
 .idea/
+confs/constants.php
 
 composer.lock

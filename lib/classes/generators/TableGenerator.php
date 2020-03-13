@@ -4,8 +4,6 @@
 namespace dis\orm\classes\generators;
 
 
-use Cassandra\Date;
-use Cassandra\Time;
 use DateTime;
 use dis\orm\classes\mvc\Model;
 use Illuminate\Database\Capsule\Manager;
@@ -78,7 +76,7 @@ class TableGenerator {
         $class = $this->class;
         $r = new ReflectionClass($class);
         foreach ($r->getProperties() as $property) {
-            if($property->isPublic()) {
+            if($property->isPublic() || $property->isProtected()) {
                 $doc = $this->string2array($property->getDocComment());
                 if(!isset($this->parsedDoc[$class]['properties'])) $this->parsedDoc[$class]['properties'] = [];
                 if(!empty($doc) && isset($doc['db_field'])) $this->parsedDoc[$class]['properties'][$property->getName()] = $doc;
@@ -128,7 +126,7 @@ class TableGenerator {
                 Manager::schema()->create($this->getName(), function (Table $table) {
                     if (!isset($this->getProperties()['id'])) $table->increments('id');
                     foreach ($this->getProperties() as $name => $items) {
-                        if (isset($items['db_type'])) {
+                        if (isset($items['db_type']) && !isset($items['automatically-added'])) {
                             $db_type = $items['var'];
                             $db_type = explode(' ', $db_type)[0];
                             $items['db_type'] = $db_type;

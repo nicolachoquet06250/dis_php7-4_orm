@@ -17,7 +17,9 @@
     "minimum-stability": "stable",
     "require": {
         "nchoquet/dis_framework_php7-4": "dev-master",
-        "illuminate/database": "^7.1"
+        "illuminate/database": "^7.1",
+        "ext-pdo": "*",
+        "ext-json": "*"
     },
     "scripts": {
         "migrate": "php scripts/db_test.php"
