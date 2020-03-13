@@ -36,9 +36,9 @@ class Model extends \Illuminate\Database\Eloquent\Model {
     const NOT_REGEXP = 'not regexp';
     const NOT_SIMILAR_TO = 'not similar to';
 
-    protected $fillable = [];
+    protected array $fillable = [];
 
-    protected $hidden = [];
+    protected array $hidden = [];
 
 	private array $hidden_keys = [ 'hidden' ];
 
@@ -230,11 +230,12 @@ class Model extends \Illuminate\Database\Eloquent\Model {
         static::table()::macro($name, $macro);
     }
 
-	/**
-	 * @param array $options
-	 *
-	 * @return bool
-	 */
+    /**
+     * @param array $options
+     *
+     * @return bool
+     * @throws Exception
+     */
     public function save(array $options = []): bool {
         $this->setUpdatedAt((new DateTime())->getTimestamp());
         return parent::save($options);

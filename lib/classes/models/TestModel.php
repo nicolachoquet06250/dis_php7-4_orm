@@ -6,7 +6,6 @@ namespace dis\orm\classes\models;
 
 use dis\orm\classes\mvc\Model;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\Date;
 
 /**
  * Class TestModel
