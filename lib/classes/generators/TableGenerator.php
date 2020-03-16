@@ -150,8 +150,6 @@ class TableGenerator {
                                             $field->default($items['default']);
                                             break;
                                     }
-
-
                                 }
                             }
                         }
